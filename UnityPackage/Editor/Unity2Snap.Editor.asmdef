@@ -1,0 +1,18 @@
+{
+  "name": "Unity2Snap.Editor",
+  "rootNamespace": "Unity2Snap.Editor",
+  "references": [
+    "Unity2Snap.Runtime"
+  ],
+  "includePlatforms": [
+    "Editor"
+  ],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": false
+}

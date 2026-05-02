@@ -1,0 +1,14 @@
+{
+  "name": "Unity2Snap.Runtime",
+  "rootNamespace": "Unity2Snap",
+  "references": [],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": false
+}

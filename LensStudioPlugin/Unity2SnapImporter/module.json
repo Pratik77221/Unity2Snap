@@ -1,0 +1,7 @@
+{
+  "name": "Unity2Snap Importer",
+  "main": "main.js",
+  "permissions": [
+    "filesystem"
+  ]
+}

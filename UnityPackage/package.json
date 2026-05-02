@@ -1,0 +1,19 @@
+{
+  "name": "com.pratik77221.unity2snap",
+  "version": "0.1.0",
+  "displayName": "Unity2Snap - Import Unity Scenes to Snapchat",
+  "description": "Exports Unity scene layout data into a USLS manifest for reconstruction in Snapchat Lens Studio.",
+  "unity": "2021.3",
+  "author": {
+    "name": "Pratik77221",
+    "url": "https://github.com/Pratik77221/Unity2Snap"
+  },
+  "keywords": [
+    "unity",
+    "snapchat",
+    "lens-studio",
+    "spectacles",
+    "export",
+    "usls"
+  ]
+}
