@@ -9,6 +9,28 @@ namespace Unity2Snap.Editor
 {
     internal static class UslsSceneExporter
     {
+        public static UslsExportResult AnalyzeActiveScene(UslsExportSettings settings)
+        {
+            if (settings == null)
+            {
+                throw new ArgumentNullException(nameof(settings));
+            }
+
+            var analysisSettings = settings.Clone();
+            NormalizeSettings(analysisSettings);
+            analysisSettings.AnalyzeOnly = true;
+
+            var manifest = BuildManifest(analysisSettings);
+            return new UslsExportResult
+            {
+                Success = true,
+                Manifest = manifest,
+                OutputDirectory = analysisSettings.OutputDirectory,
+                ManifestPath = Path.Combine(analysisSettings.OutputDirectory, "scene.usls.json"),
+                ReportPath = Path.Combine(analysisSettings.OutputDirectory, "report.md")
+            };
+        }
+
         public static UslsExportResult ExportActiveScene(UslsExportSettings settings)
         {
             if (settings == null)
@@ -16,16 +38,37 @@ namespace Unity2Snap.Editor
                 throw new ArgumentNullException(nameof(settings));
             }
 
-            if (string.IsNullOrEmpty(settings.OutputDirectory))
+            var exportSettings = settings.Clone();
+            NormalizeSettings(exportSettings);
+            exportSettings.AnalyzeOnly = false;
+
+            Directory.CreateDirectory(exportSettings.OutputDirectory);
+            Directory.CreateDirectory(Path.Combine(exportSettings.OutputDirectory, "assets"));
+            Directory.CreateDirectory(Path.Combine(exportSettings.OutputDirectory, "assets", "meshes"));
+            Directory.CreateDirectory(Path.Combine(exportSettings.OutputDirectory, "assets", "textures"));
+
+            var manifest = BuildManifest(exportSettings);
+
+            var manifestPath = Path.Combine(exportSettings.OutputDirectory, "scene.usls.json");
+            File.WriteAllText(manifestPath, JsonUtility.ToJson(manifest, true));
+
+            var reportPath = Path.Combine(exportSettings.OutputDirectory, "report.md");
+            File.WriteAllText(reportPath, UslsReportWriter.CreateReport(manifest));
+
+            AssetDatabase.Refresh();
+
+            return new UslsExportResult
             {
-                settings.OutputDirectory = UslsFileUtility.DefaultOutputDirectory;
-            }
+                Success = true,
+                Manifest = manifest,
+                OutputDirectory = exportSettings.OutputDirectory,
+                ManifestPath = manifestPath,
+                ReportPath = reportPath
+            };
+        }
 
-            Directory.CreateDirectory(settings.OutputDirectory);
-            Directory.CreateDirectory(Path.Combine(settings.OutputDirectory, "assets"));
-            Directory.CreateDirectory(Path.Combine(settings.OutputDirectory, "assets", "meshes"));
-            Directory.CreateDirectory(Path.Combine(settings.OutputDirectory, "assets", "textures"));
-
+        private static UslsManifest BuildManifest(UslsExportSettings settings)
+        {
             var scene = SceneManager.GetActiveScene();
             var manifest = CreateManifest(scene, settings);
             var warnings = new UslsWarningSink(manifest);
@@ -33,6 +76,17 @@ namespace Unity2Snap.Editor
             var objectIds = new Dictionary<GameObject, string>();
 
             var roots = GetExportRoots(scene, settings);
+            if (roots.Count == 0)
+            {
+                warnings.Add(
+                    "warning",
+                    "NO_EXPORT_ROOTS",
+                    null,
+                    "/",
+                    "No export roots were found for the current scope.",
+                    "Select at least one GameObject or disable selected-roots-only export.");
+            }
+
             WarnAboutSelectedRootParentTransforms(roots, settings, warnings);
             foreach (var root in roots)
             {
@@ -50,23 +104,15 @@ namespace Unity2Snap.Editor
             }
 
             FinalizeStats(manifest, assets);
+            return manifest;
+        }
 
-            var manifestPath = Path.Combine(settings.OutputDirectory, "scene.usls.json");
-            File.WriteAllText(manifestPath, JsonUtility.ToJson(manifest, true));
-
-            var reportPath = Path.Combine(settings.OutputDirectory, "report.md");
-            File.WriteAllText(reportPath, UslsReportWriter.CreateReport(manifest));
-
-            AssetDatabase.Refresh();
-
-            return new UslsExportResult
+        private static void NormalizeSettings(UslsExportSettings settings)
+        {
+            if (string.IsNullOrEmpty(settings.OutputDirectory))
             {
-                Success = true,
-                Manifest = manifest,
-                OutputDirectory = settings.OutputDirectory,
-                ManifestPath = manifestPath,
-                ReportPath = reportPath
-            };
+                settings.OutputDirectory = UslsFileUtility.DefaultOutputDirectory;
+            }
         }
 
         private static UslsManifest CreateManifest(Scene scene, UslsExportSettings settings)

@@ -70,7 +70,7 @@ namespace Unity2Snap.Editor
             if (settings.CopySupportedSourceAssets && TryCopySourceAsset(sourcePath, "assets/meshes", assetId, out var relativePath))
             {
                 asset.path = relativePath;
-                asset.importHint = "copied_source_model";
+                asset.importHint = settings.AnalyzeOnly ? "would_copy_source_model" : "copied_source_model";
             }
             else if (!IsBuiltInAssetPath(sourcePath))
             {
@@ -118,18 +118,18 @@ namespace Unity2Snap.Editor
             if (settings.CopySupportedSourceAssets && TryCopySourceAsset(sourcePath, "assets/textures", assetId, out var relativePath))
             {
                 asset.path = relativePath;
-                asset.importHint = "copied_source_texture";
+                asset.importHint = settings.AnalyzeOnly ? "would_copy_source_texture" : "copied_source_texture";
             }
             else if (settings.CopySupportedSourceAssets && TryWriteTexturePng(texture, "assets/textures", assetId, out relativePath))
             {
                 asset.path = relativePath;
-                asset.importHint = "baked_png_texture";
+                asset.importHint = settings.AnalyzeOnly ? "would_bake_png_texture" : "baked_png_texture";
                 warnings.Add(
                     "info",
-                    "TEXTURE_BAKED_TO_PNG",
+                    settings.AnalyzeOnly ? "TEXTURE_CAN_BAKE_TO_PNG" : "TEXTURE_BAKED_TO_PNG",
                     objectId,
                     objectPath,
-                    "Texture was baked to PNG for Lens Studio import.",
+                    settings.AnalyzeOnly ? "Texture can be baked to PNG during export." : "Texture was baked to PNG for Lens Studio import.",
                     "Validate color space and compression in Lens Studio for final Spectacles builds.");
             }
             else if (!string.IsNullOrEmpty(sourcePath))
@@ -228,15 +228,20 @@ namespace Unity2Snap.Editor
                 return false;
             }
 
+            var safeName = UslsFileUtility.SanitizeFileName(Path.GetFileNameWithoutExtension(sourcePath));
+            var fileName = safeName + "_" + assetId.Substring(assetId.Length - 8) + extension.ToLowerInvariant();
+            relativePath = UslsFileUtility.CombineRelative(relativeFolder, fileName);
+            if (settings.AnalyzeOnly)
+            {
+                return true;
+            }
+
             var outputFolder = Path.Combine(outputDirectory, relativeFolder.Replace('/', Path.DirectorySeparatorChar));
             Directory.CreateDirectory(outputFolder);
 
-            var safeName = UslsFileUtility.SanitizeFileName(Path.GetFileNameWithoutExtension(sourcePath));
-            var fileName = safeName + "_" + assetId.Substring(assetId.Length - 8) + extension.ToLowerInvariant();
             var destination = Path.Combine(outputFolder, fileName);
             File.Copy(absoluteSource, destination, true);
 
-            relativePath = UslsFileUtility.CombineRelative(relativeFolder, fileName);
             return true;
         }
 
@@ -252,6 +257,15 @@ namespace Unity2Snap.Editor
             var scale = maxDimension > 2048 ? 2048f / maxDimension : 1f;
             var width = Mathf.Max(1, Mathf.RoundToInt(texture.width * scale));
             var height = Mathf.Max(1, Mathf.RoundToInt(texture.height * scale));
+            var safeSourceName = !string.IsNullOrEmpty(texture.name) ? texture.name : "texture";
+            var safeName = UslsFileUtility.SanitizeFileName(safeSourceName);
+            var fileName = safeName + "_" + assetId.Substring(assetId.Length - 8) + ".png";
+
+            relativePath = UslsFileUtility.CombineRelative(relativeFolder, fileName);
+            if (settings.AnalyzeOnly)
+            {
+                return true;
+            }
 
             var previous = RenderTexture.active;
             var temporary = RenderTexture.GetTemporary(width, height, 0, RenderTextureFormat.ARGB32, RenderTextureReadWrite.sRGB);
@@ -274,13 +288,9 @@ namespace Unity2Snap.Editor
                 var outputFolder = Path.Combine(outputDirectory, relativeFolder.Replace('/', Path.DirectorySeparatorChar));
                 Directory.CreateDirectory(outputFolder);
 
-                var safeSourceName = !string.IsNullOrEmpty(texture.name) ? texture.name : "texture";
-                var safeName = UslsFileUtility.SanitizeFileName(safeSourceName);
-                var fileName = safeName + "_" + assetId.Substring(assetId.Length - 8) + ".png";
                 var destination = Path.Combine(outputFolder, fileName);
                 File.WriteAllBytes(destination, bytes);
 
-                relativePath = UslsFileUtility.CombineRelative(relativeFolder, fileName);
                 return true;
             }
             catch (Exception)

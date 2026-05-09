@@ -29,6 +29,7 @@ Unity scene -> scene.usls.json + assets -> Lens Studio scene objects
 - Camera hints for Spectacles/device-camera workflows
 - Player/XR rig markers used to offset imported scene root
 - Basic collider metadata and guarded Lens physics collider creation
+- Unity-side pre-export analysis for counts, warnings, and import risks
 - Human-readable export report and import warning summary
 
 ## Current Limits
@@ -53,6 +54,7 @@ Unity2Snap/
       main.js
       importer-core.js
   docs/
+    ROADMAP.md
     USLS_CONTRACT.md
   media/
     poster.png
@@ -96,8 +98,10 @@ Export a scene:
 
 1. Open the Unity scene you want to export.
 2. Go to `Tools > Unity2Snap > Export Active Scene`.
-3. Choose an output folder, for example `Unity2SnapExport`.
-4. Click `Export Active Scene`.
+3. Use the top `Analyze` / `Export` menu to switch panels.
+4. In `Analyze`, click `Analyze Scene` to preview object counts, warnings, and import risks.
+5. In `Export`, choose an output folder, for example `Unity2SnapExport`.
+6. Click `Export Active Scene`.
 
 Unity writes:
 
@@ -148,12 +152,7 @@ See [docs/USLS_CONTRACT.md](docs/USLS_CONTRACT.md) for importer behavior and sch
 
 ## Roadmap
 
-- Per-object GLB export for Unity meshes
-- Better material graph/PBR mapping
-- Lens-native primitive creation when the plugin API is stable enough
-- Collider arrays and richer physics mapping
-- Animation clip transfer notes or simple clip import
-- Optional `.lso` packaging for clean Lens Studio reuse
+See [docs/ROADMAP.md](docs/ROADMAP.md) for the planned version rollout. The near-term focus is reliable visual fidelity, native Lens Studio primitive creation, safer reimport workflow, and richer scene metadata before Spectacles/XR setup.
 
 ## Repository
 

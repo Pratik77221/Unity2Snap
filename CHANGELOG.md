@@ -10,6 +10,8 @@
 - Kept long-form documentation at repo root under `docs/` and removed optional Unity package `Documentation~` content.
 - Added USLS manifest schema models and Unity editor export window.
 - Added active scene scanning, migration reports, warning summaries, and stable source IDs.
+- Added Unity-side pre-export scene analysis that builds the manifest in dry-run mode before files are written.
+- Reworked the Unity exporter window with a top Analyze/Export panel menu.
 - Exported hierarchy, transforms, enabled state, meshes, primitives, materials, textures, lights, cameras, colliders, and player/XR rig markers.
 - Added selected-root parent anchors so XR/VR rig parent transforms survive export.
 - Added texture copy and PNG bake fallback for Lens Studio-friendly material textures.

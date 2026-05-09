@@ -21,6 +21,30 @@ namespace Unity2Snap.Editor
         public bool ConvertMetersToCentimeters = true;
         public bool ConvertUnityToLensHandedness = true;
         public bool CopySupportedSourceAssets = true;
+        public bool AnalyzeOnly;
+
+        public UslsExportSettings Clone()
+        {
+            return new UslsExportSettings
+            {
+                OutputDirectory = OutputDirectory,
+                ExportSelectedRootsOnly = ExportSelectedRootsOnly,
+                SelectedRoots = SelectedRoots != null ? new List<GameObject>(SelectedRoots) : new List<GameObject>(),
+                ExportInactiveObjects = ExportInactiveObjects,
+                IncludeEditorOnlyObjects = IncludeEditorOnlyObjects,
+                IncludeMeshMetadata = IncludeMeshMetadata,
+                IncludeMaterialMetadata = IncludeMaterialMetadata,
+                IncludeColliders = IncludeColliders,
+                IncludeLights = IncludeLights,
+                IncludeCameraHints = IncludeCameraHints,
+                IncludePlayerSpawnMarkers = IncludePlayerSpawnMarkers,
+                IncludeUnityUiObjects = IncludeUnityUiObjects,
+                ConvertMetersToCentimeters = ConvertMetersToCentimeters,
+                ConvertUnityToLensHandedness = ConvertUnityToLensHandedness,
+                CopySupportedSourceAssets = CopySupportedSourceAssets,
+                AnalyzeOnly = AnalyzeOnly
+            };
+        }
     }
 
     internal sealed class UslsExportResult

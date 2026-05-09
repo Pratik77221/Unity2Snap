@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Text;
 using UnityEditor;
 using UnityEngine;
 
@@ -21,13 +22,18 @@ namespace Unity2Snap.Editor
         private bool convertUnityToLensHandedness = true;
         private bool copySupportedSourceAssets = true;
         private Vector2 scroll;
+        private UslsManifest lastAnalysis;
+        private string lastAnalysisSummary;
+        private MessageType lastAnalysisMessageType = MessageType.None;
+        private int selectedPanel;
+        private static readonly string[] PanelNames = { "Analyze", "Export" };
 
         [MenuItem("Tools/Unity2Snap/Export Active Scene")]
         private static void Open()
         {
             var window = GetWindow<UslsExportWindow>();
             window.titleContent = new GUIContent("Unity2Snap Export");
-            window.minSize = new Vector2(460f, 520f);
+            window.minSize = new Vector2(500f, 580f);
             window.Show();
         }
 
@@ -49,19 +55,56 @@ namespace Unity2Snap.Editor
                 "Exports scene layout data for a later Lens Studio importer. This is not a Unity gameplay/code converter.",
                 MessageType.Info);
 
-            DrawOutputSection();
-            DrawScopeSection();
-            DrawContentSection();
-            DrawConversionSection();
-            DrawActions();
+            DrawPanelMenu();
+            if (selectedPanel == 0)
+            {
+                DrawAnalyzePanel();
+            }
+            else
+            {
+                DrawExportPanel();
+                DrawSettingsSection();
+            }
 
             EditorGUILayout.EndScrollView();
         }
 
-        private void DrawOutputSection()
+        private void DrawPanelMenu()
         {
             EditorGUILayout.Space(8f);
-            EditorGUILayout.LabelField("Output", EditorStyles.boldLabel);
+            selectedPanel = GUILayout.Toolbar(selectedPanel, PanelNames, GUILayout.Height(32f));
+        }
+
+        private void DrawAnalyzePanel()
+        {
+            EditorGUILayout.Space(8f);
+            EditorGUILayout.BeginVertical(EditorStyles.helpBox);
+            EditorGUILayout.LabelField("Analyze", EditorStyles.boldLabel);
+
+            if (GUILayout.Button("Analyze Scene", GUILayout.Height(32f)))
+            {
+                Analyze();
+            }
+
+            EditorGUILayout.Space(4f);
+            if (lastAnalysis == null)
+            {
+                EditorGUILayout.HelpBox("Preview object counts, import risks, and warnings before exporting.", MessageType.Info);
+            }
+            else
+            {
+                EditorGUILayout.HelpBox(lastAnalysisSummary, lastAnalysisMessageType);
+                DrawWarningPreview(lastAnalysis);
+            }
+
+            EditorGUILayout.EndVertical();
+        }
+
+        private void DrawExportPanel()
+        {
+            EditorGUILayout.Space(8f);
+            EditorGUILayout.BeginVertical(EditorStyles.helpBox);
+            EditorGUILayout.LabelField("Export", EditorStyles.boldLabel);
 
             using (new EditorGUILayout.HorizontalScope())
             {
@@ -75,6 +118,25 @@ namespace Unity2Snap.Editor
                     }
                 }
             }
+
+            using (new EditorGUI.DisabledScope(string.IsNullOrEmpty(outputDirectory)))
+            {
+                if (GUILayout.Button("Export Active Scene", GUILayout.Height(32f)))
+                {
+                    Export();
+                }
+            }
+
+            EditorGUILayout.EndVertical();
+        }
+
+        private void DrawSettingsSection()
+        {
+            EditorGUILayout.Space(8f);
+            EditorGUILayout.LabelField("Export Settings", EditorStyles.boldLabel);
+            DrawScopeSection();
+            DrawContentSection();
+            DrawConversionSection();
         }
 
         private void DrawScopeSection()
@@ -122,44 +184,56 @@ namespace Unity2Snap.Editor
             }
         }
 
-        private void DrawActions()
+        private void Analyze()
         {
-            EditorGUILayout.Space(16f);
-            using (new EditorGUI.DisabledScope(string.IsNullOrEmpty(outputDirectory)))
+            var settings = CreateSettings();
+            try
             {
-                if (GUILayout.Button("Export Active Scene", GUILayout.Height(36f)))
-                {
-                    Export();
-                }
+                EditorUtility.DisplayProgressBar("Unity2Snap", "Analyzing active scene...", 0.5f);
+                var result = UslsSceneExporter.AnalyzeActiveScene(settings);
+                EditorUtility.ClearProgressBar();
+
+                StoreAnalysis(result.Manifest);
+                Debug.Log("[Unity2Snap] Analysis complete\n" + lastAnalysisSummary);
+            }
+            catch (System.Exception exception)
+            {
+                EditorUtility.ClearProgressBar();
+                Debug.LogException(exception);
+                EditorUtility.DisplayDialog("Unity2Snap Analysis Failed", exception.Message, "OK");
             }
         }
 
         private void Export()
         {
-            var settings = new UslsExportSettings
-            {
-                OutputDirectory = outputDirectory,
-                ExportSelectedRootsOnly = exportSelectedRootsOnly,
-                SelectedRoots = new List<GameObject>(Selection.gameObjects),
-                ExportInactiveObjects = exportInactiveObjects,
-                IncludeEditorOnlyObjects = includeEditorOnlyObjects,
-                IncludeMeshMetadata = includeMeshMetadata,
-                IncludeMaterialMetadata = includeMaterialMetadata,
-                IncludeColliders = includeColliders,
-                IncludeLights = includeLights,
-                IncludeCameraHints = includeCameraHints,
-                IncludePlayerSpawnMarkers = includePlayerSpawnMarkers,
-                IncludeUnityUiObjects = includeUnityUiObjects,
-                ConvertMetersToCentimeters = convertMetersToCentimeters,
-                ConvertUnityToLensHandedness = convertUnityToLensHandedness,
-                CopySupportedSourceAssets = copySupportedSourceAssets
-            };
+            var settings = CreateSettings();
 
             try
             {
-                EditorUtility.DisplayProgressBar("Unity2Snap", "Exporting USLS manifest...", 0.5f);
+                EditorUtility.DisplayProgressBar("Unity2Snap", "Analyzing scene before export...", 0.25f);
+                var analysisResult = UslsSceneExporter.AnalyzeActiveScene(settings);
+                StoreAnalysis(analysisResult.Manifest);
+
+                if (analysisResult.Manifest.stats.errorCount > 0)
+                {
+                    EditorUtility.ClearProgressBar();
+                    var shouldContinue = EditorUtility.DisplayDialog(
+                        "Unity2Snap Analysis Found Errors",
+                        lastAnalysisSummary + "\n\nContinue exporting anyway?",
+                        "Export Anyway",
+                        "Cancel");
+
+                    if (!shouldContinue)
+                    {
+                        return;
+                    }
+                }
+
+                EditorUtility.DisplayProgressBar("Unity2Snap", "Exporting USLS manifest...", 0.65f);
                 var result = UslsSceneExporter.ExportActiveScene(settings);
                 EditorUtility.ClearProgressBar();
+
+                StoreAnalysis(result.Manifest);
 
                 EditorUtility.DisplayDialog(
                     "Unity2Snap Export Complete",
@@ -177,6 +251,110 @@ namespace Unity2Snap.Editor
                 EditorUtility.ClearProgressBar();
                 Debug.LogException(exception);
                 EditorUtility.DisplayDialog("Unity2Snap Export Failed", exception.Message, "OK");
+            }
+        }
+
+        private UslsExportSettings CreateSettings()
+        {
+            return new UslsExportSettings
+            {
+                OutputDirectory = outputDirectory,
+                ExportSelectedRootsOnly = exportSelectedRootsOnly,
+                SelectedRoots = new List<GameObject>(Selection.gameObjects),
+                ExportInactiveObjects = exportInactiveObjects,
+                IncludeEditorOnlyObjects = includeEditorOnlyObjects,
+                IncludeMeshMetadata = includeMeshMetadata,
+                IncludeMaterialMetadata = includeMaterialMetadata,
+                IncludeColliders = includeColliders,
+                IncludeLights = includeLights,
+                IncludeCameraHints = includeCameraHints,
+                IncludePlayerSpawnMarkers = includePlayerSpawnMarkers,
+                IncludeUnityUiObjects = includeUnityUiObjects,
+                ConvertMetersToCentimeters = convertMetersToCentimeters,
+                ConvertUnityToLensHandedness = convertUnityToLensHandedness,
+                CopySupportedSourceAssets = copySupportedSourceAssets
+            };
+        }
+
+        private void StoreAnalysis(UslsManifest manifest)
+        {
+            lastAnalysis = manifest;
+            lastAnalysisSummary = CreateAnalysisSummary(manifest);
+            lastAnalysisMessageType = GetAnalysisMessageType(manifest);
+            Repaint();
+        }
+
+        private static MessageType GetAnalysisMessageType(UslsManifest manifest)
+        {
+            if (manifest.stats.errorCount > 0)
+            {
+                return MessageType.Error;
+            }
+
+            if (manifest.stats.warningCount > 0)
+            {
+                return MessageType.Warning;
+            }
+
+            return MessageType.Info;
+        }
+
+        private static string CreateAnalysisSummary(UslsManifest manifest)
+        {
+            var stats = manifest.stats;
+            var builder = new StringBuilder();
+            builder.AppendLine("Scene: " + manifest.exporter.sceneName);
+            builder.AppendLine("Objects: " + stats.objectCount + " | Meshes: " + stats.meshObjectCount + " | Primitives: " + stats.primitiveObjectCount);
+            builder.AppendLine("Lights: " + stats.lightCount + " | Camera hints: " + stats.cameraHintCount + " | Colliders: " + stats.colliderCount + " | Player spawns: " + stats.playerSpawnCount);
+            builder.AppendLine("Materials: " + stats.materialCount + " | Textures: " + stats.textureCount + " | Triangles: " + stats.totalTriangles);
+            builder.AppendLine("Warnings: " + stats.warningCount + " | Errors: " + stats.errorCount + " | Notices: " + stats.noticeCount);
+            builder.AppendLine("Importable asset references: " + CountImportableAssets(manifest));
+            return builder.ToString().TrimEnd();
+        }
+
+        private static int CountImportableAssets(UslsManifest manifest)
+        {
+            var count = 0;
+            for (var i = 0; i < manifest.assets.Count; i++)
+            {
+                if (!string.IsNullOrEmpty(manifest.assets[i].path))
+                {
+                    count++;
+                }
+            }
+
+            return count;
+        }
+
+        private static void DrawWarningPreview(UslsManifest manifest)
+        {
+            var shown = 0;
+            for (var i = 0; i < manifest.warnings.Count; i++)
+            {
+                var warning = manifest.warnings[i];
+                if (warning.severity == "info")
+                {
+                    continue;
+                }
+
+                if (shown == 0)
+                {
+                    EditorGUILayout.LabelField("Top Warnings", EditorStyles.boldLabel);
+                }
+
+                EditorGUILayout.LabelField(warning.code + " - " + warning.objectPath, EditorStyles.miniBoldLabel);
+                EditorGUILayout.LabelField(warning.message, EditorStyles.wordWrappedLabel);
+                shown++;
+
+                if (shown >= 5)
+                {
+                    break;
+                }
+            }
+
+            if (manifest.stats.warningCount > shown)
+            {
+                EditorGUILayout.LabelField("+" + (manifest.stats.warningCount - shown) + " more warnings in the export report.", EditorStyles.miniLabel);
             }
         }
     }
