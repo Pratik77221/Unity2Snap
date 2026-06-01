@@ -138,22 +138,27 @@ Unity2SnapExport/
 
 ## Lens Studio Setup
 
-![Unity2Snap Lens Studio importer panel](media/Snap_Package.png)
-
-1. Open Lens Studio.
-2. Open `Preferences > Plugins`.
-3. Under `Additional Libraries`, add this folder:
-
-   ```text
-   LensStudioPlugin
-   ```
-
-4. Enable `Unity2Snap Importer`.
-5. Open the importer panel.
-6. Click `Browse Folder...` and choose the Unity export folder containing `scene.usls.json`.
-7. Review the analysis summary, then click `Import Scene`.
-
-Do not add `LensStudioPlugin/Unity2SnapImporter` directly. Lens Studio expects the parent plugin modules directory.
+<table>
+  <tr>
+    <td width="50%" valign="top">
+      <h3>Lens Studio Importer Setup</h3>
+      <p>Configure the plugin and import your Unity scene layout into Lens Studio:</p>
+      <ol>
+        <li>Open Lens Studio.</li>
+        <li>Open <code>Preferences > Plugins</code>.</li>
+        <li>Under <code>Additional Libraries</code>, add the <code>LensStudioPlugin</code> folder.</li>
+        <li>Enable <strong>Unity2Snap Importer</strong>.</li>
+        <li>Open the importer panel.</li>
+        <li>Click <strong>Browse Folder...</strong> and choose the Unity export folder containing <code>scene.usls.json</code>.</li>
+        <li>Review the analysis summary, then click <strong>Import Scene</strong>.</li>
+      </ol>
+      <p>⚠️ <em>Note: Do not add <code>LensStudioPlugin/Unity2SnapImporter</code> directly. Lens Studio expects the parent <code>LensStudioPlugin</code> directory containing the modules.</em></p>
+    </td>
+    <td width="50%" valign="top">
+      <img src="media/Snap_Package.png" alt="Unity2Snap Lens Studio importer panel" width="100%" />
+    </td>
+  </tr>
+</table>
 
 ## Spectacles Notes
 
