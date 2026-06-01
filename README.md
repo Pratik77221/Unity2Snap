@@ -1,4 +1,4 @@
-# Unity2Snap - Unity Scenes to LensStudio
+# Unity2Snap - Export Unity Scenes to LensStudio
 
 ![Unity2Snap poster](media/poster.png)
 
