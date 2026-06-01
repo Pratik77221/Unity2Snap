@@ -16,7 +16,7 @@ Unity scene -> scene.usls.json + assets -> Lens Studio scene objects
 
 ## Demo [ Sound ON ]
 
-<video src="media/demo.mp4" controls width="100%"></video>
+<video src="https://github.com/user-attachments/assets/bd0a1a3a-85ae-4f84-9beb-c78440f49336" width="100%" controls></video>
 
 ## What Works
 
