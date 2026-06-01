@@ -2,7 +2,7 @@
 
 ## 0.1.0 - Initial Public MVP
 
-- Renamed and structured the project as `Unity2Snap - Import Unity Scenes to Snapchat`.
+- Renamed and structured the project as `Unity2Snap - Import Unity Scenes to LensStudio`.
 - Moved the Unity Package Manager package into `UnityPackage/`.
 - Kept the Lens Studio plugin modules in `LensStudioPlugin/`.
 - Added root README, poster media, package screenshots, GitHub install paths, and setup instructions.

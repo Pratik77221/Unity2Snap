@@ -1,4 +1,4 @@
-# Unity2Snap - Import Unity Scenes to Snapchat
+# Unity2Snap - Unity Scenes to LensStudio
 
 ![Unity2Snap poster](media/poster.png)
 
@@ -6,7 +6,7 @@
 [![Unity](https://img.shields.io/badge/Unity-2021.3%2B-black)](UnityPackage/package.json)
 [![Lens Studio](https://img.shields.io/badge/Lens%20Studio-5.x-yellow)](LensStudioPlugin)
 
-Unity2Snap is a bridge for moving Unity scene layout data into Snapchat Lens Studio, with Spectacles projects as the main target.
+Unity2Snap is a bridge for moving Unity scene layout data into Snapchat's Lens Studio, with Spectacles projects as the main target.
 
 The core idea is simple: Unity exports a scene manifest, Lens Studio imports that manifest and rebuilds the scene hierarchy. It does not try to convert Unity gameplay code into Lens Studio scripts.
 
@@ -62,7 +62,8 @@ Unity2Snap/
     USLS_CONTRACT.md
   media/
     poster.png
-    Unity_Package.png
+    analyse_Unity.png
+    export_Unity.png
     Snap_Package.png
   README.md
   CHANGELOG.md
@@ -98,14 +99,31 @@ This repository also includes a root compatibility `package.json` so older local
 
 Export a scene:
 
-![Unity2Snap Unity exporter window](media/Unity_Package.png)
-
 1. Open the Unity scene you want to export.
 2. Go to `Tools > Unity2Snap > Export Active Scene`.
-3. Use the top `Analyze` / `Export` menu to switch panels.
-4. In `Analyze`, click `Analyze Scene` to preview object counts, warnings, and import risks.
-5. In `Export`, choose an output folder, for example `Unity2SnapExport`.
-6. Click `Export Active Scene`.
+3. Use the tabs to switch panels:
+
+<table>
+  <tr>
+    <td width="50%" valign="top">
+      <h3>Analyze Tab</h3>
+      <p>Click <strong>Analyze Scene</strong> to preview object counts, active/inactive states, warnings, and import risks.</p>
+    </td>
+    <td width="50%" valign="top">
+      <h3>Export Tab</h3>
+      <p>Choose an output folder and click <strong>Export Active Scene</strong> to perform the export.</p>
+    </td>
+  </tr>
+  <tr>
+    <td valign="top">
+      <img src="media/analyse_Unity.png" alt="Analyze Tab" width="100%" />
+    </td>
+    <td valign="top">
+      <img src="media/export_Unity.png" alt="Export Tab" width="100%" />
+    </td>
+  </tr>
+</table>
+
 
 Unity writes:
 

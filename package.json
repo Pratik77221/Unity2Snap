@@ -1,7 +1,7 @@
 {
   "name": "com.unitysnapbridge.usls-exporter",
   "version": "0.1.0",
-  "displayName": "Unity2Snap - Import Unity Scenes to Snapchat",
+  "displayName": "Unity2Snap - Import Unity Scenes to LensStudio",
   "description": "Compatibility package entrypoint for projects that still reference the old local Unity Snap Bridge package path. New installs should use com.pratik77221.unity2snap from /UnityPackage.",
   "unity": "2021.3",
   "author": {
