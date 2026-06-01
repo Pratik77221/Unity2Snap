@@ -14,6 +14,10 @@ The core idea is simple: Unity exports a scene manifest, Lens Studio imports tha
 Unity scene -> scene.usls.json + assets -> Lens Studio scene objects
 ```
 
+## Demo [ Sound ON ]
+
+<video src="media/demo.mp4" controls width="100%"></video>
+
 ## What Works
 
 - Unity hierarchy export with stable IDs, names, enabled state, and parent relationships
